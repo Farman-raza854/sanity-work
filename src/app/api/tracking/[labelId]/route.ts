@@ -3,13 +3,10 @@ import type { NextRequest } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { labelId: string | string[] } }
+  { params }: { params: { labelId: string } }
 ) {
   try {
-    // Ensure labelId is a string (in case it comes as an array)
-    const labelId = Array.isArray(params.labelId) 
-      ? params.labelId[0] 
-      : params.labelId;
+    const { labelId } = params;
 
     if (!labelId) {
       return NextResponse.json(

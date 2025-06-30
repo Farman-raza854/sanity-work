@@ -8,7 +8,6 @@ import {
   FiYoutube,
   FiFacebook,
   FiTwitter,
-  FiSearch,
   FiShoppingCart,
   FiHeart,
   FiX,
@@ -69,7 +68,7 @@ const Header = () => {
           {/* Contact Information */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
-              <FiPhone  className="hover:text-green-500"/>
+              <FiPhone className="hover:text-green-500"/>
               <p className="hover:text-green-500">(+92) 3133856076</p>
             </div>
             <div className="flex items-center gap-1">
@@ -143,8 +142,25 @@ const Header = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-32 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#23A6F0]"
               />
-              <button type="submit" className="absolute right-2 top-1.5">
-                <FiSearch className="text-lg cursor-pointer hover:text-green-500" />
+              <button 
+                type="submit" 
+                className="absolute right-2 top-1.5"
+                aria-label="Search"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-gray-500 hover:text-green-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
               </button>
             </form>
 
@@ -189,7 +205,7 @@ const Header = () => {
               >
                 <Image
                   src={"/cart-icon.png"}
-                  alt="icon"
+                  alt="Cart"
                   width={24}
                   height={18}
                 />
@@ -215,7 +231,7 @@ const Header = () => {
               ) : (
                 <Image
                   src={"/menu-icon.png"}
-                  alt="icon"
+                  alt="Menu"
                   width={23}
                   height={14}
                   className="mr-3"
@@ -233,46 +249,48 @@ const Header = () => {
                 </Link>
               </li>
                {/* Shop Dropdown */}
-            <li className="relative z-50">
-              <button
-                className="flex items-center gap-1 hover:text-green-500 transition-all"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                <Link href="/productList" className="hover:text-green-500 transition-all">
-                Shop
-                </Link>
-                <RiArrowDownSLine className="ml-1 text-xl hover:text-green-500" />
-              </button>
+              <li className="relative z-50">
+                <button
+                  className="flex items-center gap-1 hover:text-green-500 transition-all"
+                  onClick={toggleDropdown}
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <Link href="/productList" className="hover:text-green-500 transition-all">
+                    Shop
+                  </Link>
+                  <RiArrowDownSLine className="ml-1 text-xl hover:text-green-500" />
+                </button>
 
-              {dropdownOpen && (
-                <div className="absolute top-full left-0 bg-white shadow-lg rounded-md py-2 w-40 border border-gray-200 z-1000">
-                  <Link
-                    href="/mens-clothing"
-                    className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
-                  >
-                    Men's Clothing
-                  </Link>
-                  <Link
-                    href="/womens-clothing"
-                    className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
-                  >
-                    Women's Clothing
-                  </Link>
-                  <Link
-                    href="/accessories"
-                    className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
-                  >
-                    Accessories
-                  </Link>
-                  <Link
-                    href="/shoes"
-                    className="block px-4 py-2 text-black hover:bg-green-600  hover:text-green-500 transition-all"
-                  >
-                    Shoes
-                  </Link>
-                </div>
-              )}
-            </li>
+                {dropdownOpen && (
+                  <div className="absolute top-full left-0 bg-white shadow-lg rounded-md py-2 w-40 border border-gray-200 z-1000">
+                    <Link
+                      href="/mens-clothing"
+                      className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
+                    >
+                      Men&apos;s Clothing
+                    </Link>
+                    <Link
+                      href="/womens-clothing"
+                      className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
+                    >
+                      Women&apos;s Clothing
+                    </Link>
+                    <Link
+                      href="/accessories"
+                      className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
+                    >
+                      Accessories
+                    </Link>
+                    <Link
+                      href="/shoes"
+                      className="block px-4 py-2 text-black hover:bg-green-600 hover:text-green-500 transition-all"
+                    >
+                      Shoes
+                    </Link>
+                  </div>
+                )}
+              </li>
               <li>
                 <Link
                   href="/products"
@@ -343,8 +361,25 @@ const Header = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#23A6F0] hover:text-green-500"
               />
-              <button type="submit" className="absolute right-2 top-2">
-                <FiSearch className="text-lg cursor-pointer mt-1 hover:text-green-500" />
+              <button 
+                type="submit" 
+                className="absolute right-2 top-2"
+                aria-label="Search"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 text-gray-500 hover:text-green-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
               </button>
             </form>
 
@@ -433,46 +468,48 @@ const Header = () => {
                   </Link>
                 </li>
                 {/* Shop Dropdown */}
-            <li className="relative z-50 flex justify-center item-center">
-              <button
-                className="flex items-center gap-1 hover:text-green-500 transition-all"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                <Link href="/productList" className="hover:text-green-500 transition-all">
-                Shop
-                </Link>
-                <RiArrowDownSLine className="ml-1 text-xl hover:text-green-500" />
-              </button>
+                <li className="relative z-50 flex justify-center item-center">
+                  <button
+                    className="flex items-center gap-1 hover:text-green-500 transition-all"
+                    onClick={toggleDropdown}
+                    aria-expanded={dropdownOpen}
+                    aria-haspopup="true"
+                  >
+                    <Link href="/productList" className="hover:text-green-500 transition-all">
+                      Shop
+                    </Link>
+                    <RiArrowDownSLine className="ml-1 text-xl hover:text-green-500" />
+                  </button>
 
-              {dropdownOpen && (
-                <div className="absolute top-full left-0 bg-white shadow-lg rounded-md py-2 w-40 border border-gray-200 z-1000">
-                  <Link
-                    href="/mens-clothing"
-                    className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
-                  >
-                    Men's Clothing
-                  </Link>
-                  <Link
-                    href="/womens-clothing"
-                    className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
-                  >
-                    Women's Clothing
-                  </Link>
-                  <Link
-                    href="/accessories"
-                    className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
-                  >
-                    Accessories
-                  </Link>
-                  <Link
-                    href="/shoes"
-                    className="block px-4 py-2 text-black hover:bg-green-600  hover:text-green-500 transition-all"
-                  >
-                    Shoes
-                  </Link>
-                </div>
-              )}
-            </li>
+                  {dropdownOpen && (
+                    <div className="absolute top-full left-0 bg-white shadow-lg rounded-md py-2 w-40 border border-gray-200 z-1000">
+                      <Link
+                        href="/mens-clothing"
+                        className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
+                      >
+                        Men&apos;s Clothing
+                      </Link>
+                      <Link
+                        href="/womens-clothing"
+                        className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
+                      >
+                        Women&apos;s Clothing
+                      </Link>
+                      <Link
+                        href="/accessories"
+                        className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
+                      >
+                        Accessories
+                      </Link>
+                      <Link
+                        href="/shoes"
+                        className="block px-4 py-2 text-black hover:bg-green-600 hover:text-green-500 transition-all"
+                      >
+                        Shoes
+                      </Link>
+                    </div>
+                  )}
+                </li>
                 <li>
                   <Link
                     href="/products"
@@ -535,7 +572,25 @@ const Header = () => {
 
                 {/* Other Icons */}
                 <div className="flex gap-6 text-[#23A6F0]">
-                  <FiSearch className="text-2xl cursor-pointer hover:text-green-500" />
+                  <button 
+                    onClick={() => document.querySelector('form')?.dispatchEvent(new Event('submit'))}
+                    aria-label="Search"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6 hover:text-green-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </button>
                   <Link href={"/cart"}>
                     <motion.div
                       className="relative"

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
           country_code: "US",
           address_residential_indicator: "no",
         },
-        packages: packages.map((pkg: any) => ({
+        packages: packages.map((pkg: { weight: { value: number; unit: string }; dimensions: { height: number; width: number; length: number; unit: string } }) => ({
           weight: {
             value: pkg.weight.value,
             unit: pkg.weight.unit,

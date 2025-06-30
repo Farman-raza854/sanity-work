@@ -61,7 +61,7 @@ const ShippingRatesPage = () => {
     try {
       const response = await axios.post("/api/get-rates", {
         shipeToAddress,
-        packages: cartProductsWhichCanBeShipped.map((product: { weight: any; dimensions: any; }) => ({
+        packages: cartProductsWhichCanBeShipped.map((product: { weight: { value: number; unit: string }; dimensions: { height: number; width: number; length: number; unit: string } }) => ({
           weight: product.weight,
           dimensions: product.dimensions,
         })),

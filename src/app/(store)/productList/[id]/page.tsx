@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { FiChevronRight, FiHeart, FiShoppingCart, FiEye } from "react-icons/fi";
 import { FaStar, FaRegStar } from "react-icons/fa";
 import { CartItem, useCart } from "@/components/cart-components/CartContext";
@@ -13,9 +13,68 @@ import "react-toastify/dist/ReactToastify.css";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
 import Loader from "@/components/home-components/loader";
-import { Product, Review } from "../../../types/types"; 
 
-const transformToProduct = (sanityProduct: any): Product | null => {
+// Define types
+interface SanityImage {
+  _type: string;
+  asset: {
+    _ref: string;
+    _type: string;
+  };
+}
+
+interface SanitySlug {
+  _type: string;
+  current: string;
+}
+
+interface Review {
+  _key?: string;
+  name: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+interface SanityProduct {
+  _id: string;
+  _type: string;
+  name: string;
+  slug: SanitySlug;
+  inStock: boolean;
+  image: SanityImage;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  colors?: string[];
+  department?: string;
+  rating?: number;
+  stock?: number;
+  reviews?: Review[];
+}
+
+interface Product {
+  _id: string;
+  _type: string;
+  name: string;
+  slug: SanitySlug;
+  inStock: boolean;
+  image: SanityImage;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  colors: string[];
+  department: string;
+  rating: number;
+  stock: number;
+  reviews: Review[];
+}
+
+interface PageParams {
+  id: string;
+}
+
+const transformToProduct = (sanityProduct: SanityProduct | null): Product | null => {
   if (!sanityProduct) return null;
 
   return {
@@ -37,14 +96,14 @@ const transformToProduct = (sanityProduct: any): Product | null => {
 };
 
 const ProductPage = () => {
-  const { id } = useParams();
+  const { id } = useParams<PageParams>();
   const { addToCart, addToWishlist, isInWishlist } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [submittingReview, setSubmittingReview] = useState(false);
-  const [review, setReview] = useState<Review>({
+  const [review, setReview] = useState<Omit<Review, '_key'>>({
     name: "",
     rating: 0,
     comment: "",
@@ -52,68 +111,64 @@ const ProductPage = () => {
   });
 
   // Fetch product data
-  useEffect(() => {
-    async function fetchProduct() {
-      try {
-        setLoading(true);
-        const query = `*[_type == "productList" && slug.current == $id][0]{
-          _id,
-          _type,
-          name,
-          slug,
-          inStock,
-          image,
-          description,
-          price,
-          discountPrice,
-          colors,
-          department,
-          rating,
-          stock,
-          reviews
-        }`;
-        const sanityProduct = await client.fetch(query, { id });
+  const fetchProduct = useCallback(async () => {
+    try {
+      setLoading(true);
+      const query = `*[_type == "productList" && slug.current == $id][0]{
+        _id,
+        _type,
+        name,
+        slug,
+        inStock,
+        image,
+        description,
+        price,
+        discountPrice,
+        colors,
+        department,
+        rating,
+        stock,
+        reviews
+      }`;
+      const sanityProduct: SanityProduct | null = await client.fetch(query, { id });
 
-        if (!sanityProduct) {
-          throw new Error("Product not found");
-        }
-
-        const product = transformToProduct(sanityProduct);
-        setProduct(product);
-
-        if (product?.image) {
-          setCurrentImage(urlFor(product.image).url());
-        }
-      } catch (error) {
-        console.error("Error fetching product:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to load product"
-        );
-        toast.error("Failed to load product");
-      } finally {
-        setLoading(false);
+      if (!sanityProduct) {
+        throw new Error("Product not found");
       }
-    }
 
-    if (id) {
-      fetchProduct();
+      const transformedProduct = transformToProduct(sanityProduct);
+      setProduct(transformedProduct);
+
+      if (transformedProduct?.image) {
+        setCurrentImage(urlFor(transformedProduct.image).url());
+      }
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Failed to load product");
+      console.error("Error fetching product:", error);
+      setError(error.message);
+      toast.error("Failed to load product");
+    } finally {
+      setLoading(false);
     }
   }, [id]);
 
-  // Handle review input changes
+  useEffect(() => {
+    if (id) {
+      fetchProduct();
+    }
+  }, [id, fetchProduct]);
+
   const handleReviewChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setReview((prev) => ({ ...prev, [name]: value }));
+    setReview(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle rating selection
   const handleRatingChange = (rating: number) => {
-    setReview((prev) => ({ ...prev, rating }));
+    setReview(prev => ({ ...prev, rating }));
   };
 
-  // Submit review to the API route
   const handleSubmitReview = async () => {
     if (!product || !review.name.trim() || !review.comment.trim() || review.rating === 0) {
       toast.error("Please fill out all fields and provide a rating.");
@@ -138,60 +193,31 @@ const ProductPage = () => {
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || "Failed to submit review.");
+        throw new Error("Failed to submit review.");
       }
 
-      // Refresh product data to show new review
-      const query = `*[_type == "productList" && _id == $productId][0]{
-        _id,
-        _type,
-        name,
-        slug,
-        inStock,
-        image,
-        description,
-        price,
-        discountPrice,
-        colors,
-        department,
-        rating,
-        stock,
-        reviews
-      }`;
-      const updatedProduct = await client.fetch(query, { productId: product._id });
-
-      if (updatedProduct) {
-        setProduct(transformToProduct(updatedProduct));
-      }
-
+      // Refresh product data
+      await fetchProduct();
       toast.success("Review submitted successfully!");
       setReview({ name: "", rating: 0, comment: "", date: "" });
-    } catch (error) {
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Failed to submit review");
       console.error("Error submitting review:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to submit review.");
+      toast.error(error.message);
     } finally {
       setSubmittingReview(false);
     }
   };
 
-  // Handle adding to cart
   const handleAddToCart = () => {
-    if (!product) {
-      console.log("Product data is missing!");
-      return;
-    }
+    if (!product) return;
 
     if (!product.inStock || product.stock <= 0) {
-      toast.error(
-        "This product is out of stock and cannot be added to the cart.",
-        {
-          position: "bottom-right",
-          autoClose: 3000,
-        }
-      );
+      toast.error("This product is out of stock and cannot be added to the cart.", {
+        position: "bottom-right",
+        autoClose: 3000,
+      });
       return;
     }
 
@@ -207,19 +233,14 @@ const ProductPage = () => {
     };
 
     addToCart(item);
-
     toast.success(`${product.name} added to cart!`, {
       position: "bottom-right",
       autoClose: 3000,
     });
   };
 
-  // Handle adding to wishlist
   const handleAddToWishlist = () => {
-    if (!product) {
-      console.log("Product data is missing!");
-      return;
-    }
+    if (!product) return;
 
     if (isInWishlist(product._id)) {
       toast.info("This product is already in your wishlist!", {
@@ -273,27 +294,27 @@ const ProductPage = () => {
     );
   }
 
-  // Calculate average rating
-  const averageRating =
-    product.reviews && product.reviews.length > 0
-      ? product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length
-      : 0;
+  const averageRating = product.reviews.length > 0
+    ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
+    : 0;
 
   return (
     <div className="bg-[#FAFAFA] min-h-screen">
-      <ClerkProvider
-        publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      >
+      <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
         <Header />
       </ClerkProvider>
+      
+      {/* Breadcrumb */}
       <div>
         <p className="text-[#252B42] mt-5 font-bold text-[14px] flex py-8 px-4 sm:px-16 gap-1">
           Home <FiChevronRight className="text-[#BDBDBD] text-[25px]" />{" "}
           <span className="text-[#737373]">Shop</span>
         </p>
       </div>
+
+      {/* Product Content */}
       <div className="px-4 sm:px-14 flex flex-col sm:flex-row gap-8">
-        {/* Carousel Section */}
+        {/* Product Image */}
         <div className="w-full sm:w-[506px] h-[650px] relative">
           <div className="w-full h-full rounded-lg overflow-hidden shadow-lg border border-[#E8E8E8]">
             <Image
@@ -301,32 +322,34 @@ const ProductPage = () => {
               alt={product.name}
               fill
               className="object-cover rounded-lg"
+              priority
             />
           </div>
         </div>
 
-        {/* Product Details Section */}
+        {/* Product Details */}
         <div className="flex-1 ml-0 sm:ml-10 text-center sm:text-left">
           <h2 className="text-[#252B42] text-3xl font-bold mt-12 md:mt-0">
             {product.name}
           </h2>
-          {/* Star Reviews Section */}
+          
+          {/* Rating */}
           <div className="flex justify-center sm:justify-start items-center mt-4">
             <div className="flex text-[#F3CD03] gap-2">
-              {[...Array(5)].map((_, index) =>
-                index < Math.round(averageRating) ? (
-                  <FaStar key={index} size={24} />
+              {[1, 2, 3, 4, 5].map((star) => (
+                star <= Math.round(averageRating) ? (
+                  <FaStar key={star} size={24} />
                 ) : (
-                  <FaRegStar key={index} size={24} />
+                  <FaRegStar key={star} size={24} />
                 )
-              )}
+              ))}
             </div>
             <span className="ml-2 text-[#737373] font-bold text-[14px]">
-              {product.reviews?.length || 0} Reviews
+              {product.reviews.length} Reviews
             </span>
           </div>
 
-          {/* Price and Availability */}
+          {/* Price */}
           <div className="mt-8">
             <p className="text-[#252B42] font-bold text-3xl">
               {product.discountPrice && (
@@ -337,12 +360,10 @@ const ProductPage = () => {
               ${product.discountPrice || product.price}
             </p>
             <p className="text-[#737373] font-bold text-[14px] mt-2">
-              Availability :{" "}
-              <span
-                className={`font-bold text-[14px] ${
-                  product.inStock && product.stock > 0 ? "text-[#23A6F0]" : "text-[#E74040]"
-                }`}
-              >
+              Availability:{" "}
+              <span className={`font-bold text-[14px] ${
+                product.inStock && product.stock > 0 ? "text-[#23A6F0]" : "text-[#E74040]"
+              }`}>
                 {product.inStock && product.stock > 0
                   ? `In Stock (${product.stock} available)`
                   : "Out of Stock"}
@@ -350,6 +371,7 @@ const ProductPage = () => {
             </p>
           </div>
 
+          {/* Description */}
           <div className="mt-8">
             <p className="text-[#858585] text-[16px] leading-relaxed">
               {product.description}
@@ -357,24 +379,25 @@ const ProductPage = () => {
             <div className="border-b-2 border-[#BDBDBD] mt-8"></div>
           </div>
 
-          {/* Colored Rounded Divs */}
-          {product.colors && product.colors.length > 0 && (
+          {/* Colors */}
+          {product.colors.length > 0 && (
             <div className="flex justify-center sm:justify-start mt-8 gap-4">
               {product.colors.map((color, index) => (
                 <div
                   key={index}
                   className="w-10 h-10 rounded-full border-2 border-[#E8E8E8] hover:border-[#23A6F0] transition-all"
                   style={{ backgroundColor: color }}
-                ></div>
+                />
               ))}
             </div>
           )}
 
-          {/* Action Buttons with Icons */}
+          {/* Action Buttons */}
           <div className="flex justify-center sm:justify-start gap-4 mt-14">
             <button className="px-5 py-1 md:px-8 md:py-3 bg-[#23A6F0] hover:bg-[#1E90FF] text-white rounded-lg text-[16px] font-bold transition-all shadow-lg hover:shadow-xl">
               Select Options
             </button>
+            
             <div className="relative group">
               <button
                 className={`w-12 h-12 bg-white hover:bg-[#F1F1F1] text-[#252B42] border border-[#E8E8E8] rounded-full flex items-center justify-center text-[24px] font-bold transition-all shadow-lg hover:shadow-xl ${
@@ -388,6 +411,7 @@ const ProductPage = () => {
                 {isInWishlist(product._id) ? "In Wishlist" : "Add to Wishlist"}
               </div>
             </div>
+            
             <div className="relative group">
               <button
                 className="w-12 h-12 bg-white hover:bg-[#F1F1F1] text-[#252B42] border border-[#E8E8E8] rounded-full flex items-center justify-center text-[24px] font-bold transition-all shadow-lg hover:shadow-xl"
@@ -399,6 +423,7 @@ const ProductPage = () => {
                 Add to Cart
               </div>
             </div>
+            
             <button className="w-12 h-12 bg-white hover:bg-[#F1F1F1] text-[#252B42] border border-[#E8E8E8] rounded-full flex items-center justify-center text-[24px] font-bold transition-all shadow-lg hover:shadow-xl">
               <FiEye />
             </button>
@@ -452,26 +477,24 @@ const ProductPage = () => {
             </div>
           </div>
 
-          {/* Display Reviews */}
+          {/* Customer Reviews */}
           <div className="mt-12">
             <h3 className="text-2xl font-bold text-[#252B42] mb-4">
               Customer Reviews
             </h3>
-            {product.reviews && product.reviews.length > 0 ? (
+            {product.reviews.length > 0 ? (
               product.reviews.map((review, index) => (
                 <div key={index} className="mb-6 p-4 bg-white rounded-lg shadow-sm">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-[#252B42]">
-                      {review.name}
-                    </span>
+                    <span className="font-bold text-[#252B42]">{review.name}</span>
                     <div className="flex text-[#F3CD03]">
-                      {[...Array(5)].map((_, i) =>
-                        i < review.rating ? (
-                          <FaStar key={i} size={16} />
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        star <= review.rating ? (
+                          <FaStar key={star} size={16} />
                         ) : (
-                          <FaRegStar key={i} size={16} />
+                          <FaRegStar key={star} size={16} />
                         )
-                      )}
+                      ))}
                     </div>
                     <span className="text-[#737373] text-sm">
                       {new Date(review.date).toLocaleDateString()}
@@ -481,13 +504,12 @@ const ProductPage = () => {
                 </div>
               ))
             ) : (
-              <p className="text-[#737373]">
-                No reviews yet. Be the first to review!
-              </p>
+              <p className="text-[#737373]">No reviews yet. Be the first to review!</p>
             )}
           </div>
         </div>
       </div>
+
       <Footer />
       <ToastContainer />
     </div>

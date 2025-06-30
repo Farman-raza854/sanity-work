@@ -21,7 +21,7 @@ interface CustomerInfo {
 }
 
 const CheckoutPage = () => {
-  const { cartItems, clearCart } = useCart();
+  const { cartItems, clearCart } = useCart(); // clearCart is used in the success page
   const [isLoading, setIsLoading] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     email: "",
@@ -102,12 +102,12 @@ const CheckoutPage = () => {
           <div className="text-center">
             <h1 className="text-3xl font-bold text-[#252B42] mb-4">Your cart is empty</h1>
             <p className="text-[#737373] mb-8">Add some items to your cart to proceed with checkout.</p>
-            <a
-              href="/productList"
-              className="bg-[#23A6F0] text-white px-6 py-3 rounded-lg hover:bg-blue-400 transition-all"
-            >
-              Continue Shopping
-            </a>
+            <Link
+                 href="/productList"
+                 className="bg-[#23A6F0] text-white px-6 py-3 rounded-lg hover:bg-blue-400 transition-all"
+>
+                 Continue Shopping
+            </Link>
           </div>
         </div>
         <Footer />

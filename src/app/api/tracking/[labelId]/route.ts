@@ -1,45 +1,58 @@
-"use client";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-import Link from "next/link";
-import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { labelId: string | string[] } }
+) {
+  try {
+    // Ensure labelId is a string (in case it comes as an array)
+    const labelId = Array.isArray(params.labelId) 
+      ? params.labelId[0] 
+      : params.labelId;
 
-// ... (keep your existing variants and other constants)
+    if (!labelId) {
+      return NextResponse.json(
+        { error: "Label ID is required" },
+        { status: 400 }
+      );
+    }
 
-const Hero = () => {
-  const images = [
-    "./bg2.png",
-    "./shoppingpic.jpg",
-    "./shoppinpic2.webp",
-    "./shoppingpic3.webp",
-  ];
+    const shipEngineApiKey = process.env.SHIPENGINE_API_KEY;
+    
+    if (!shipEngineApiKey) {
+      return NextResponse.json(
+        { error: "ShipEngine API key not configured" },
+        { status: 500 }
+      );
+    }
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [direction, setDirection] = useState("right");
-
-  const handleNext = useCallback(() => {
-    setDirection("right");
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+    const response = await fetch(
+      `https://api.shipengine.com/v1/labels/${labelId}/track`,
+      {
+        method: "GET",
+        headers: {
+          "API-Key": shipEngineApiKey,
+        },
+      }
     );
-  }, [images.length]);
 
-  const handlePrev = useCallback(() => {
-    setDirection("left");
-    setCurrentImageIndex((prevIndex) =>
-      prevIndex === 0 ? images.length - 1 : prevIndex - 1
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("ShipEngine tracking API error:", errorData);
+      return NextResponse.json(
+        { error: "Failed to fetch tracking information" },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("Error fetching tracking information:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
     );
-  }, [images.length]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      handleNext();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [currentImageIndex, handleNext]);
-
-  // ... (keep the rest of your component code the same)
-};
-
-export default Hero;
+  }
+}

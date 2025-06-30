@@ -71,7 +71,7 @@ export default function PaymentSuccessPage() {
             </div>
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Payment Verification Failed</h1>
             <p className="text-gray-600 mb-8">
-              We couldn't verify your payment. Please contact support if you believe this is an error.
+              We couldn&apos;t verify your payment. Please contact support if you believe this is an error.
             </p>
             <Link
               href="/cart"

@@ -8,7 +8,6 @@ import {
   FiYoutube,
   FiFacebook,
   FiTwitter,
-  FiSearch,
   FiShoppingCart,
   FiHeart,
   FiX,
@@ -52,11 +51,6 @@ const Header = () => {
     // Redirect to the search results page
     window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
   };
-
-  const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
-  };
-
 
   return (
     <div className="overflow-x-hidden">
@@ -154,9 +148,11 @@ const Header = () => {
                         href={`/products/${product.slug.current}`}
                         className="flex items-center gap-4"
                       >
-                        <img
+                        <Image
                           src={product.image}
                           alt={product.name}
+                          width={40}
+                          height={40}
                           className="w-10 h-10 object-cover rounded"
                         />
                         <div>
@@ -234,13 +230,13 @@ const Header = () => {
                     href="/mens-clothing"
                     className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
                   >
-                    Men's Clothing
+                    Men&apos;s Clothing
                   </Link>
                   <Link
                     href="/womens-clothing"
                     className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
                   >
-                    Women's Clothing
+                    Women&apos;s Clothing
                   </Link>
                   <Link
                     href="/accessories"
@@ -345,8 +341,8 @@ const Header = () => {
                         <Image
                           src={product.image}
                           alt={product.name}
-                          width={200}
-                          height={300}
+                          width={40}
+                          height={40}
                           className="w-10 h-10 object-cover rounded"
                         />
                         <div>
@@ -415,13 +411,13 @@ const Header = () => {
                     href="/mens-clothing"
                     className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
                   >
-                    Men's Clothing
+                    Men&apos;s Clothing
                   </Link>
                   <Link
                     href="/womens-clothing"
                     className="block px-4 py-2 text-black hover:bg-green-600 hover:text-white transition-all"
                   >
-                    Women's Clothing
+                    Women&apos;s Clothing
                   </Link>
                   <Link
                     href="/accessories"
@@ -522,7 +518,3 @@ const Header = () => {
 };
 
 export default Header;
-function setDropdownOpen(arg0: boolean) {
-  throw new Error("Function not implemented.");
-}
-

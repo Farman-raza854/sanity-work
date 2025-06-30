@@ -8,6 +8,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Image from "next/image";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Link from "next/link";
 
 interface CustomerInfo {
   email: string;
@@ -21,7 +22,7 @@ interface CustomerInfo {
 }
 
 const CheckoutPage = () => {
-  const { cartItems, clearCart } = useCart(); // clearCart is used in the success page
+  const { cartItems } = useCart(); // Removed clearCart since it's not used here
   const [isLoading, setIsLoading] = useState(false);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     email: "",
@@ -103,10 +104,10 @@ const CheckoutPage = () => {
             <h1 className="text-3xl font-bold text-[#252B42] mb-4">Your cart is empty</h1>
             <p className="text-[#737373] mb-8">Add some items to your cart to proceed with checkout.</p>
             <Link
-                 href="/productList"
-                 className="bg-[#23A6F0] text-white px-6 py-3 rounded-lg hover:bg-blue-400 transition-all"
->
-                 Continue Shopping
+              href="/productList"
+              className="bg-[#23A6F0] text-white px-6 py-3 rounded-lg hover:bg-blue-400 transition-all"
+            >
+              Continue Shopping
             </Link>
           </div>
         </div>
